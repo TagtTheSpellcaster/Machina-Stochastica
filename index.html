@@ -1,0 +1,1780 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#151c17">
+<title>Machina Stochastica — Officina degli Enigmi · Machina N. 003</title>
+<style>
+:root{
+ --ink:#21170f;--wood:#3a291b;--brass:#c49a55;--gold:#f0d18a;
+ --green:#344b3a;--paper:#dfc99b;--dial:#f2e4c6;--bronze-dark:#1d140c;
+}
+*{box-sizing:border-box;user-select:none;-webkit-user-select:none}
+html,body{
+ margin:0;
+ padding:0;
+ min-height:100dvh;
+ background:radial-gradient(ellipse at 50% 10%,#4b5b4255,transparent 55%),#151c17;
+ color:var(--paper);
+ font-family:Georgia,serif;
+}
+body{
+ display:flex;
+ justify-content:center;
+ align-items:center;
+ padding:6px;
+}
+
+.cabinet{
+ width:min(100%, 1240px);
+ min-height:calc(100dvh - 12px);
+ padding:8px 10px;
+ display:flex;
+ flex-direction:column;
+ justify-content:space-between;
+ gap:5px;
+ background:linear-gradient(135deg,#ffffff12,transparent 25%),repeating-linear-gradient(90deg,#0000000a 0 2px,transparent 2px 6px),#3b2a1c;
+ border:4px ridge #98703c;
+ box-shadow:0 0 0 2px #20160f,0 0 0 4px #b68a4b,0 10px 30px #000c;
+}
+
+.machine-header{
+ display:flex;
+ flex-wrap:wrap;
+ justify-content:space-between;
+ align-items:center;
+ gap:6px;
+ padding:4px 10px;
+ background:linear-gradient(180deg,#2b1e14,#1a120b);
+ border:2px ridge #987346;
+ box-shadow:inset 0 0 10px #000a;
+}
+.machine-header h1{
+ margin:0;
+ font-variant:small-caps;
+ font-size:clamp(15px, 2vw, 20px);
+ letter-spacing:2px;
+ color:#f0d18a;
+ text-shadow:0 2px 3px #000;
+ line-height:1.1;
+}
+.machine-header .subtitle{
+ font:bold 9px "Courier New",monospace;
+ letter-spacing:1.2px;
+ color:#c0a477;
+ text-transform:uppercase;
+}
+.header-actions{display:flex;gap:6px;align-items:center}
+
+button.mech-btn{
+ font:bold 9px "Courier New",monospace;
+ letter-spacing:0.6px;
+ text-transform:uppercase;
+ color:#f3dfb5;
+ background:linear-gradient(#617358,#2c4031);
+ border:2px ridge #c49a55;
+ padding:4px 8px;
+ box-shadow:0 2px #17110b;
+ cursor:pointer;
+}
+button.mech-btn:active{transform:translateY(1px);box-shadow:0 1px #17110b}
+button.mech-btn.muted{opacity:0.55;filter:grayscale(0.4)}
+
+/* PANNELLO IN BRONZO CON 4 VITI AGLI ANGOLI */
+.bronze-panel{
+ position:relative;
+ background:
+  radial-gradient(circle at 20% 15%, rgba(212,168,94,0.12), transparent 50%),
+  linear-gradient(160deg,#332417 0%,#21170e 55%,#171009 100%);
+ border:2px ridge #a67c46;
+ box-shadow:inset 0 0 12px #000c, 0 2px 5px #0008;
+ padding:5px 14px;
+}
+.screw{
+ position:absolute;
+ width:9px;height:9px;border-radius:50%;
+ background:radial-gradient(circle at 35% 35%, #f5d896, #9c7238 65%, #3d2810 100%);
+ border:1px solid #24170a;
+ box-shadow:0 1px 2px #000b;
+ pointer-events:none;
+}
+.screw::after{
+ content:"";position:absolute;top:3px;left:1px;right:1px;height:1.2px;
+ background:#2b1b0b;transform:rotate(32deg);
+}
+.screw.tl{top:4px;left:4px}
+.screw.tr{top:4px;right:4px}
+.screw.bl{bottom:4px;left:4px}
+.screw.br{bottom:4px;right:4px}
+.screw.tr::after{transform:rotate(-48deg)}
+.screw.bl::after{transform:rotate(75deg)}
+.screw.br::after{transform:rotate(-15deg)}
+
+.panel-label{
+ font:bold 9px "Courier New",monospace;
+ letter-spacing:1.6px;
+ color:#d8b36d;
+ text-transform:uppercase;
+ border-bottom:1px solid #75502b;
+ padding-bottom:2px;
+ margin-bottom:4px;
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+}
+
+/* RIGHE DADI STANDARD (d4, d6, d8, d10, d12) */
+.dice-rows{display:flex;flex-direction:column;gap:4px}
+
+.dice-row-grid{
+ display:grid;
+ grid-template-columns:72px 1fr auto;
+ align-items:center;
+ gap:8px;
+}
+
+.row-left-ctrl{
+ display:flex;
+ flex-direction:column;
+ align-items:center;
+ justify-content:center;
+ gap:2px;
+ padding:3px;
+ background:#160f09;
+ border:1.5px ridge #855e2c;
+}
+.die-badge{
+ font:bold 12px Georgia,serif;
+ color:#f0d18a;
+ letter-spacing:1px;
+ line-height:1;
+}
+
+/* SELETTORE SEMICIRCOLARE A LEVA (CASCATA ON/OFF e S-N-V) */
+.rotary-switch{
+ display:flex;
+ flex-direction:column;
+ align-items:center;
+ cursor:pointer;
+}
+.rotary-labels{
+ display:flex;
+ justify-content:space-between;
+ width:54px;
+ font:bold 7.5px "Courier New",monospace;
+ color:#c9ab78;
+ line-height:1;
+}
+.rotary-dial{
+ position:relative;
+ width:40px;height:22px;
+ border-radius:22px 22px 4px 4px;
+ background:radial-gradient(circle at 50% 85%, #4a3520, #1c130b);
+ border:1.5px ridge #b5894c;
+ box-shadow:inset 0 2px 4px #000;
+ margin-top:1px;
+}
+.rotary-arm{
+ position:absolute;
+ bottom:2px;left:50%;
+ width:4px;height:16px;
+ margin-left:-2px;
+ background:linear-gradient(90deg,#f5d896,#9c7034);
+ border:1px solid #2b1a0a;
+ border-radius:3px 3px 1px 1px;
+ transform-origin:50% 14px;
+ transition:transform 0.2s cubic-bezier(.3,1.4,.5,1);
+}
+.rotary-arm::after{
+ content:"";position:absolute;top:-3px;left:-2px;width:6px;height:5px;
+ border-radius:50%;background:#f0d18a;border:1px solid #3a240e;
+}
+.rotary-pivot{
+ position:absolute;bottom:1px;left:50%;width:8px;height:8px;margin-left:-4px;
+ border-radius:50%;background:#c49a55;border:1px solid #241608;
+}
+
+/* GRIGLIA 10 MANOMETRI + SELETTORI HORIZON / HORIZOFF */
+.gauges-bank{
+ display:grid;
+ grid-template-columns:repeat(10, minmax(44px, 1fr));
+ gap:4px;
+ align-items:stretch;
+}
+
+@media (max-width: 960px){
+ .dice-row-grid{grid-template-columns:1fr;gap:6px}
+ .row-left-ctrl{flex-direction:row;justify-content:space-between;padding:4px 10px}
+ .gauges-bank{grid-template-columns:repeat(5, 1fr);gap:5px}
+ .row-right-ctrl{justify-content:center}
+}
+
+.die-unit{
+ display:flex;
+ flex-direction:column;
+ align-items:center;
+ justify-content:center;
+ gap:2px;
+ padding:2px;
+ border-radius:4px;
+ background:rgba(12,8,5,0.45);
+ border:1px solid #4d351c;
+ transition:border-color 0.2s;
+}
+.die-unit.inactive{
+ border-color:#2d1f11;
+}
+.die-unit canvas{
+ width:100%;
+ max-width:49px;
+ aspect-ratio:1/1;
+ display:block;
+ transition:opacity 0.2s, filter 0.2s;
+}
+.die-unit.inactive canvas{
+ opacity:0.45;
+ filter:brightness(0.78) saturate(0.75);
+}
+
+/* SELETTORE IMMAGINE ORIZZONTALE: larghezza invariata, altezza ridotta al 90% (da ~23.8px a 21.4px) */
+.img-toggle-h{
+ width:40px;
+ height:21.4px;
+ border-radius:3px;
+ overflow:hidden;
+ cursor:pointer;
+ box-shadow:0 1px 3px #000c;
+ border:1px solid #3b2711;
+ background:#1a1109;
+ transition:transform 0.08s ease;
+ flex-shrink:0;
+}
+.img-toggle-h:active{transform:scale(0.95)}
+.img-toggle-h img{
+ width:100%;
+ height:100%;
+ object-fit:fill;
+ display:block;
+}
+
+/* SEZIONE MODIFICATORI SENZA RIQUADRO, SCALATA ALL'80% DELL'ALTEZZA DEL RIQUADRO DADI */
+.row-right-ctrl{
+ display:flex;
+ align-items:center;
+ gap:6px;
+ padding:0;
+ background:transparent;
+ border:none;
+}
+.drum-group{
+ display:flex;
+ align-items:center;
+ height:100%;
+}
+.drum-caption{
+ font:bold 7px "Courier New",monospace;
+ color:#bfa170;
+ letter-spacing:0.6px;
+ line-height:1;
+}
+
+/* Contenitore modificatore: pulsante +/- e tamburo grafico all'80% dell'altezza del riquadro dadi */
+.cylinder-bank{
+ display:flex;
+ align-items:center;
+ gap:4px;
+ height:100%;
+ background:transparent;
+ padding:0;
+ border:none;
+}
+
+/* Interruttore +/- con proporzioni originali 465x664 */
+.sign-toggle-btn{
+ height:100%;
+ width:auto;
+ aspect-ratio:465 / 664;
+ border-radius:3px;
+ overflow:hidden;
+ cursor:pointer;
+ border:1px solid #4d351c;
+ box-shadow:0 2px 4px #000c;
+ background:#1a1109;
+ flex-shrink:0;
+ transition:transform 0.08s ease;
+}
+.sign-toggle-btn:active{transform:scale(0.95)}
+.sign-toggle-btn img{
+ height:100%;
+ width:100%;
+ object-fit:contain;
+ display:block;
+}
+
+/* Gruppo tamburo grafico: left.png + 00.png + 00.png + right.png */
+.drum-assembly{
+ display:inline-flex;
+ align-items:stretch;
+ gap:0;
+ height:100%;
+ line-height:0;
+ filter:drop-shadow(0 2px 4px rgba(0,0,0,0.85));
+}
+.drum-cap{
+ height:100%;
+ width:auto;
+ display:block;
+ pointer-events:none;
+ flex-shrink:0;
+}
+.drum-wheel-img{
+ height:100%;
+ width:auto;
+ display:block;
+ cursor:ns-resize;
+ flex-shrink:0;
+ touch-action:none;
+}
+
+.row-sum-box{
+ display:flex;
+ flex-direction:column;
+ align-items:center;
+ justify-content:center;
+ gap:2px;
+ min-width:44px;
+}
+.mech-readout{
+ font:bold 12px "Courier New",monospace;
+ color:#f0d18a;
+ background:#100b07;
+ border:1.5px solid #8c632e;
+ padding:3px 5px;
+ letter-spacing:0.8px;
+ text-align:center;
+ width:100%;
+}
+
+/* SEZIONE INFERIORE: 2D20 | D100 | MONETA | INTERRUTTORE GENERALE | TOTALI */
+.bottom-deck{
+ display:grid;
+ grid-template-columns:1.35fr 0.68fr 0.72fr 0.72fr 1.1fr;
+ gap:8px;
+ align-items:stretch;
+}
+@media (max-width: 1024px){
+ .bottom-deck{grid-template-columns:1fr 1fr;gap:8px}
+}
+@media (max-width: 620px){
+ .bottom-deck{grid-template-columns:1fr}
+}
+
+.deck-card{
+ display:flex;
+ flex-direction:column;
+ justify-content:space-between;
+ align-items:center;
+ gap:4px;
+}
+
+.d20-stage{
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ gap:6px;
+ width:100%;
+}
+.d20-stage .rotary-switch{
+ justify-content:center;
+}
+.d20-pair{
+ display:flex;
+ gap:5px;
+ align-items:stretch;
+}
+.d20-unit{
+ display:flex;
+ flex-direction:column;
+ align-items:center;
+ justify-content:center;
+ gap:3px;
+ padding:3px;
+ border-radius:4px;
+ background:rgba(12,8,5,0.5);
+ border:1px solid #593d20;
+}
+.d20-unit canvas{
+ width:56px;
+ height:56px;
+ display:block;
+ transition:opacity 0.2s, filter 0.2s;
+}
+.d20-unit.inactive canvas{
+ opacity:0.45;
+ filter:brightness(0.78) saturate(0.75);
+}
+.d20-unit.chosen{border-color:#f0d18a;box-shadow:0 0 8px rgba(240,209,138,0.35)}
+
+/* D100 */
+.d100-stage{
+ display:flex;
+ flex-direction:column;
+ align-items:center;
+ gap:4px;
+}
+.d100-dials{
+ display:flex;
+ gap:6px;
+ align-items:center;
+}
+.d100-dials canvas{
+ width:52px;
+ height:52px;
+ display:block;
+ transition:opacity 0.2s, filter 0.2s;
+}
+.d100-dials.inactive canvas{
+ opacity:0.45;
+ filter:brightness(0.78) saturate(0.75);
+}
+
+/* MONETA */
+.coin-stage{
+ display:flex;
+ flex-direction:column;
+ align-items:center;
+ justify-content:center;
+ gap:4px;
+ flex:1;
+}
+.coin-viewport{
+ width:68px;height:68px;
+ perspective:500px;
+ display:flex;align-items:center;justify-content:center;
+ cursor:pointer;
+}
+.coin-body{
+ width:64px;height:64px;
+ position:relative;
+ transform-style:preserve-3d;
+}
+.coin-face{
+ position:absolute;inset:0;
+ border-radius:50%;
+ backface-visibility:hidden;
+ overflow:hidden;
+ box-shadow:0 3px 8px #000c, inset 0 0 5px #000;
+ border:2px solid #b5894c;
+ background:#1a120b;
+}
+.coin-face img{
+ width:100%;height:100%;object-fit:cover;display:block;
+}
+.coin-face.tails{transform:rotateY(180deg)}
+
+/* INTERRUTTORE GENERALE VERTICALE */
+.master-switch-stage{
+ display:flex;
+ flex-direction:column;
+ align-items:center;
+ justify-content:center;
+ gap:4px;
+}
+.master-switch-btn{
+ width:64px;
+ aspect-ratio:576 / 800;
+ height:auto;
+ border-radius:5px;
+ overflow:hidden;
+ cursor:pointer;
+ box-shadow:0 4px 10px #000d, 0 0 0 2px #2b1a0a;
+ transition:transform 0.08s ease, box-shadow 0.2s ease;
+ background:#1a1109;
+}
+.master-switch-btn:active{transform:scale(0.97)}
+.master-switch-btn.active{
+ box-shadow:0 0 14px rgba(240, 185, 80, 0.55), 0 0 0 2px #d4ab63;
+}
+.master-switch-btn img{
+ width:100%;
+ height:100%;
+ object-fit:contain;
+ display:block;
+}
+
+/* TOTALIZZATORE A 3 MANOMETRI */
+.total-dials{
+ display:flex;
+ gap:6px;
+ align-items:center;
+ justify-content:center;
+}
+.total-unit{
+ display:flex;
+ flex-direction:column;
+ align-items:center;
+ gap:2px;
+}
+.total-unit canvas{width:56px;height:56px;display:block}
+.total-unit span{
+ font:bold 7.5px "Courier New",monospace;
+ color:#c9ab78;
+ letter-spacing:0.6px;
+}
+
+footer{
+ border-top:2px double #987346;
+ padding-top:4px;
+ display:flex;
+ flex-wrap:wrap;
+ justify-content:space-between;
+ align-items:center;
+ gap:8px;
+ color:#a88a5d;
+ font:9px "Courier New",monospace;
+ letter-spacing:0.8px;
+}
+
+/* Adattamento automatico con scorrimento su schermi portatili bassi:
+   mantiene invariata l'altezza totale della riga riducendo al 90% l'altezza dei selettori
+   e destinando lo spazio recuperato ad ingrandire i quadranti dei manometri */
+@media (max-height: 850px) {
+ body {
+  align-items: flex-start;
+  padding: 12px 10px;
+ }
+ .cabinet {
+  min-height: auto;
+  justify-content: flex-start;
+  gap: 12px;
+  padding: 12px;
+ }
+ .machine-header {
+  padding: 7px 12px;
+ }
+ .bronze-panel {
+  padding: 12px 16px;
+ }
+ .dice-rows {
+  gap: 10px;
+ }
+ .die-unit {
+  padding: 4px 3px;
+  gap: 3px;
+ }
+ .die-unit canvas {
+  max-width: 68px;
+ }
+ .img-toggle-h {
+  width: 44px;
+  height: 23.6px;
+ }
+}
+</style>
+</head>
+<body>
+
+<main class="cabinet">
+ <header class="machine-header">
+  <div>
+   <h1>Machina Stochastica</h1>
+   <div class="subtitle">Calcolatore Balistico &amp; Probabilistico per Giochi di Ruolo</div>
+  </div>
+  <div class="header-actions">
+   <button class="mech-btn" id="resetAllBtn">↻ Azzera Tutto</button>
+   <button class="mech-btn" id="sfxBtn">🔔 Suoni: ON</button>
+  </div>
+ </header>
+
+ <!-- RIGHE D4, D6, D8, D10, D12 -->
+ <section class="dice-rows" id="standardRows"></section>
+
+ <!-- PLANCIA INFERIORE: 2D20, D100, MONETA, INTERRUTTORE GENERALE, TOTALI -->
+ <section class="bottom-deck">
+  <!-- 2D20 -->
+  <div class="bronze-panel deck-card">
+   <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+   <div class="panel-label" style="width:100%"><span>2d20 · Tiro Critico</span><span id="d20ModeTag">NORMALE</span></div>
+   <div class="d20-stage">
+    <div class="rotary-switch" id="d20ModeSwitch" title="Cambia modalità: S (Svantaggio) / N (Normale) / V (Vantaggio)">
+     <div class="rotary-labels"><span>S</span><span>N</span><span>V</span></div>
+     <div class="rotary-dial">
+      <div class="rotary-arm" id="d20Arm" style="transform:rotate(0deg)"></div>
+      <div class="rotary-pivot"></div>
+     </div>
+    </div>
+
+    <div class="d20-pair">
+     <div class="d20-unit inactive" id="d20Unit0">
+      <canvas id="d20Canvas0" width="104" height="104"></canvas>
+      <div class="img-toggle-h" id="d20Lev0" title="Attiva/Disattiva primo d20"><img src="horizoff.png" alt="OFF"></div>
+     </div>
+     <div class="d20-unit inactive" id="d20Unit1">
+      <canvas id="d20Canvas1" width="104" height="104"></canvas>
+      <div class="img-toggle-h" id="d20Lev1" title="Attiva/Disattiva secondo d20"><img src="horizoff.png" alt="OFF"></div>
+     </div>
+    </div>
+
+    <div class="row-right-ctrl">
+     <div class="drum-group">
+      <div class="cylinder-bank" id="d20ModWheels"></div>
+     </div>
+     <div class="row-sum-box">
+      <div class="mech-readout" id="d20Readout">—</div>
+     </div>
+    </div>
+   </div>
+  </div>
+
+  <!-- D100 -->
+  <div class="bronze-panel deck-card">
+   <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+   <div class="panel-label" style="width:100%"><span>d100</span><span>%</span></div>
+   <div class="d100-stage">
+    <div class="d100-dials inactive" id="d100DialsWrap">
+     <div class="total-unit">
+      <canvas id="d100Tens" width="90" height="90"></canvas>
+      <span>DECINE</span>
+     </div>
+     <div class="total-unit">
+      <canvas id="d100Units" width="90" height="90"></canvas>
+      <span>UNITÀ</span>
+     </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px">
+     <div class="img-toggle-h" id="d100Lev" title="Attiva/Disattiva d100"><img src="horizoff.png" alt="OFF"></div>
+     <div class="mech-readout" id="d100Readout" style="min-width:50px">OFF</div>
+    </div>
+   </div>
+  </div>
+
+  <!-- MONETA -->
+  <div class="bronze-panel deck-card">
+   <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+   <div class="panel-label" style="width:100%"><span>MONETA</span></div>
+   <div class="coin-stage">
+    <div class="coin-viewport" id="coinFlipBtn" title="Clicca per lanciare la moneta">
+     <div class="coin-body" id="coinBody">
+      <div class="coin-face heads"><img src="head.png" alt="Testa" id="imgHead"></div>
+      <div class="coin-face tails"><img src="tails.png" alt="Croce" id="imgTails"></div>
+     </div>
+    </div>
+    <div class="mech-readout" id="coinReadout" style="min-width:76px">TESTA</div>
+   </div>
+  </div>
+
+  <!-- INTERRUTTORE GENERALE -->
+  <div class="bronze-panel deck-card">
+   <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+   <div class="panel-label" style="width:100%"><span>Vapore</span><span>LANCIO</span></div>
+   <div class="master-switch-stage">
+    <div class="master-switch-btn" id="masterSwitch" role="button" tabindex="0" title="Aziona l'interruttore generale (o premi Spazio)">
+     <img src="vertoff.png" alt="Interruttore Generale OFF" id="masterSwitchImg">
+    </div>
+    <span class="drum-caption" id="masterCaption">APRI VALVOLA</span>
+   </div>
+  </div>
+
+  <!-- TOTALE GENERALE -->
+  <div class="bronze-panel deck-card">
+   <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+   <div class="panel-label" style="width:100%"><span>Totale Dadi Attivi</span><span id="totalExactTag">000</span></div>
+   <div class="total-dials">
+    <div class="total-unit">
+     <canvas id="tot2" width="96" height="96"></canvas>
+     <span>CENTINAIA</span>
+    </div>
+    <div class="total-unit">
+     <canvas id="tot1" width="96" height="96"></canvas>
+     <span>DECINE</span>
+    </div>
+    <div class="total-unit">
+     <canvas id="tot0" width="96" height="96"></canvas>
+     <span>UNITÀ</span>
+    </div>
+   </div>
+   <div style="font:7.5px 'Courier New',monospace;color:#bfa170;text-align:center">
+    D4..D12 · 2D20 · D100 (MUTUAMENTE ESCLUSIVI)
+   </div>
+  </div>
+ </section>
+
+ <footer>
+  <span>OFFICINA DEGLI ENIGMI · Machina N. 003</span>
+  <span>MACHINA STOCHASTICA · BREVETTO 1894</span>
+ </footer>
+</main>
+
+<script>
+(()=>{
+const $ = id => document.getElementById(id);
+
+/* ================= ASSET IMMAGINI ================= */
+const IMG_H_ON  = 'horizon.png';
+const IMG_H_OFF = 'horizoff.png';
+const IMG_V_ON  = 'verton.png';
+const IMG_V_OFF = 'vertoff.png';
+const IMG_PLUS  = 'plus.png';
+const IMG_MINUS = 'minus.png';
+const IMG_DRUM_LEFT  = 'left.png';
+const IMG_DRUM_RIGHT = 'right.png';
+
+const DRUM_DIGIT_SRCS = Array.from({ length: 10 }, (_, d) => `0${d}.png`);
+
+[
+ IMG_H_ON, IMG_H_OFF, IMG_V_ON, IMG_V_OFF,
+ IMG_PLUS, IMG_MINUS, IMG_DRUM_LEFT, IMG_DRUM_RIGHT,
+ 'head.png', 'tails.png',
+ ...DRUM_DIGIT_SRCS
+].forEach(src => {
+ const im = new Image();
+ im.onerror = () => {
+  if (src.endsWith('.png')) {
+   const alt = new Image();
+   alt.src = src.replace(/\.png$/, '.jpg');
+  }
+ };
+ im.src = src;
+});
+
+function setDrumDigitImage(imgEl, digit) {
+ const d = ((digit % 10) + 10) % 10;
+ const pngSrc = `0${d}.png`;
+ imgEl.dataset.fallbackTried = '0';
+ imgEl.onerror = () => {
+  if (imgEl.dataset.fallbackTried === '0') {
+   imgEl.dataset.fallbackTried = '1';
+   imgEl.src = `0${d}.jpg`;
+  }
+ };
+ imgEl.src = pngSrc;
+ imgEl.alt = String(d);
+}
+
+function setHorizontalToggleImg(el, isOn) {
+ const img = el.querySelector('img');
+ if (img) {
+  img.src = isOn ? IMG_H_ON : IMG_H_OFF;
+  img.alt = isOn ? 'ON' : 'OFF';
+ }
+}
+
+/* ================= MOTORE SONORO ================= */
+const Sound = (() => {
+ let ctx = null;
+ let enabled = true;
+
+ const clankAudio   = new Audio('clank.mp3');
+ const steamAudio   = new Audio('steam-hissing.mp3');
+ const breakerAudio = new Audio('breaker-switch.mp3');
+ const buttonAudio  = new Audio('button-press.mp3');
+ const coinAudio    = new Audio('coin.mp3');
+
+ [clankAudio, steamAudio, breakerAudio, buttonAudio, coinAudio].forEach(a => {
+  a.preload = 'auto';
+ });
+
+ function init() {
+  if (!ctx) {
+   const AC = window.AudioContext || window.webkitAudioContext;
+   if (AC) ctx = new AC();
+  }
+  if (ctx && ctx.state === 'suspended') ctx.resume();
+ }
+
+ function toggle() {
+  enabled = !enabled;
+  if (!enabled) {
+   [clankAudio, steamAudio, breakerAudio, buttonAudio, coinAudio].forEach(a => {
+    a.pause();
+    a.currentTime = 0;
+   });
+  }
+  return enabled;
+ }
+
+ function playClip(audioEl) {
+  if (!enabled) return;
+  try {
+   audioEl.pause();
+   audioEl.currentTime = 0;
+   const p = audioEl.play();
+   if (p !== undefined) p.catch(() => {});
+  } catch (_) {}
+ }
+
+ function playBreaker() { playClip(breakerAudio); }
+ function playButtonPress() { playClip(buttonAudio); }
+ function playCoin() { playClip(coinAudio); }
+
+ function wheelTick() {
+  if (!enabled) return;
+  init(); if (!ctx) return;
+  const now = ctx.currentTime;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(1150, now);
+  osc.frequency.exponentialRampToValueAtTime(520, now + 0.025);
+  gain.gain.setValueAtTime(0.09, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
+  osc.connect(gain); gain.connect(ctx.destination);
+  osc.start(now); osc.stop(now + 0.032);
+ }
+
+ function playMasterLaunchSequence(onAfterClank, onAfterSteam) {
+  const startSteamPhase = () => {
+   if (onAfterClank) onAfterClank();
+
+   let steamCompleted = false;
+   let steamFallback = null;
+
+   const finishSteam = () => {
+    if (steamCompleted) return;
+    steamCompleted = true;
+    if (steamFallback) clearTimeout(steamFallback);
+    steamAudio.removeEventListener('ended', finishSteam);
+    steamAudio.removeEventListener('error', finishSteam);
+    if (onAfterSteam) onAfterSteam();
+   };
+
+   if (!enabled) {
+    const durMs = (isFinite(steamAudio.duration) && steamAudio.duration > 0)
+     ? Math.round(steamAudio.duration * 1000)
+     : 1400;
+    steamFallback = setTimeout(finishSteam, durMs);
+    return;
+   }
+
+   steamAudio.pause();
+   steamAudio.currentTime = 0;
+   steamAudio.addEventListener('ended', finishSteam);
+   steamAudio.addEventListener('error', finishSteam);
+
+   const safetyMs = (isFinite(steamAudio.duration) && steamAudio.duration > 0)
+    ? Math.round(steamAudio.duration * 1000) + 150
+    : 3000;
+   steamFallback = setTimeout(finishSteam, safetyMs);
+
+   const pSteam = steamAudio.play();
+   if (pSteam !== undefined) {
+    pSteam.catch(() => {
+     clearTimeout(steamFallback);
+     steamFallback = setTimeout(finishSteam, 1200);
+    });
+   }
+  };
+
+  let clankCompleted = false;
+  let clankFallback = null;
+
+  const finishClank = () => {
+   if (clankCompleted) return;
+   clankCompleted = true;
+   if (clankFallback) clearTimeout(clankFallback);
+   clankAudio.removeEventListener('ended', finishClank);
+   clankAudio.removeEventListener('error', finishClank);
+   startSteamPhase();
+  };
+
+  if (!enabled) {
+   const clankDurMs = (isFinite(clankAudio.duration) && clankAudio.duration > 0)
+    ? Math.round(clankAudio.duration * 1000)
+    : 220;
+   clankFallback = setTimeout(finishClank, clankDurMs);
+   return;
+  }
+
+  clankAudio.pause();
+  clankAudio.currentTime = 0;
+  clankAudio.addEventListener('ended', finishClank);
+  clankAudio.addEventListener('error', finishClank);
+
+  const clankSafetyMs = (isFinite(clankAudio.duration) && clankAudio.duration > 0)
+   ? Math.round(clankAudio.duration * 1000) + 100
+   : 800;
+  clankFallback = setTimeout(finishClank, clankSafetyMs);
+
+  const pClank = clankAudio.play();
+  if (pClank !== undefined) {
+   pClank.catch(() => {
+    clearTimeout(clankFallback);
+    finishClank();
+   });
+  }
+ }
+
+ return { init, toggle, playBreaker, playButtonPress, playCoin, wheelTick, playMasterLaunchSequence };
+})();
+
+/* ================= RENDERING MANOMETRI STEAMPUNK ================= */
+function drawNeedle(gCtx, cx, cy, r, angle, color, pivotR) {
+ gCtx.save();
+ gCtx.translate(cx, cy);
+ gCtx.rotate(angle);
+
+ gCtx.fillStyle = 'rgba(0,0,0,0.28)';
+ gCtx.beginPath();
+ gCtx.moveTo(-r * 0.22, 1.8);
+ gCtx.lineTo(r * 0.82, 1.8);
+ gCtx.lineTo(-r * 0.22, 3.6);
+ gCtx.fill();
+
+ gCtx.fillStyle = color;
+ gCtx.beginPath();
+ gCtx.moveTo(-r * 0.22, -1.8);
+ gCtx.lineTo(r * 0.82, 0);
+ gCtx.lineTo(-r * 0.22, 1.8);
+ gCtx.closePath();
+ gCtx.fill();
+ gCtx.restore();
+
+ gCtx.fillStyle = '#c49a55';
+ gCtx.strokeStyle = '#2b1c0e';
+ gCtx.lineWidth = 1.1;
+ gCtx.beginPath();
+ gCtx.arc(cx, cy, pivotR, 0, Math.PI * 2);
+ gCtx.fill();
+ gCtx.stroke();
+}
+
+function drawGaugeBase(gCtx, size, active = true) {
+ const cx = size / 2, cy = size / 2, r = size * 0.44;
+ gCtx.clearRect(0, 0, size, size);
+
+ const brassGrad = gCtx.createLinearGradient(0, 0, size, size);
+ brassGrad.addColorStop(0, active ? '#f5d996' : '#9c865c');
+ brassGrad.addColorStop(0.5, active ? '#a87938' : '#635235');
+ brassGrad.addColorStop(1, '#3d2710');
+ gCtx.fillStyle = brassGrad;
+ gCtx.beginPath();
+ gCtx.arc(cx, cy, r + size * 0.05, 0, Math.PI * 2);
+ gCtx.fill();
+
+ const faceGrad = gCtx.createRadialGradient(cx - r * 0.2, cy - r * 0.2, r * 0.1, cx, cy, r);
+ faceGrad.addColorStop(0, active ? '#fbf1dc' : '#cfc2a7');
+ faceGrad.addColorStop(0.8, active ? '#e3cfa6' : '#b3a384');
+ faceGrad.addColorStop(1, '#9c8154');
+ gCtx.fillStyle = faceGrad;
+ gCtx.beginPath();
+ gCtx.arc(cx, cy, r, 0, Math.PI * 2);
+ gCtx.fill();
+ gCtx.strokeStyle = '#3b2814';
+ gCtx.lineWidth = 1.4;
+ gCtx.stroke();
+
+ return { cx, cy, r };
+}
+
+function drawDieDial(gCtx, size, maxSides, currentVal, active, hasRolled) {
+ const { cx, cy, r } = drawGaugeBase(gCtx, size, active);
+ const startAng = Math.PI * 0.75;
+ const sweep = Math.PI * 1.5;
+
+ gCtx.fillStyle = '#23170d';
+ gCtx.strokeStyle = '#23170d';
+ gCtx.textAlign = 'center';
+ gCtx.textBaseline = 'middle';
+
+ const fontScale = maxSides >= 20 ? 0.105 : maxSides >= 10 ? 0.115 : 0.13;
+ gCtx.font = `bold ${Math.round(size * fontScale)}px "Courier New", monospace`;
+
+ for (let v = 1; v <= maxSides; v++) {
+  const frac = (v - 1) / (maxSides - 1);
+  const ang = startAng + frac * sweep;
+  const cos = Math.cos(ang), sin = Math.sin(ang);
+
+  const showLabel = maxSides <= 12 || v === 1 || v === 20 || v % 2 === 0;
+  gCtx.lineWidth = showLabel ? 1.5 : 0.9;
+  gCtx.beginPath();
+  gCtx.moveTo(cx + cos * (r * (showLabel ? 0.74 : 0.81)), cy + sin * (r * (showLabel ? 0.74 : 0.81)));
+  gCtx.lineTo(cx + cos * (r * 0.92), cy + sin * (r * 0.92));
+  gCtx.stroke();
+
+  if (showLabel) {
+   gCtx.fillText(String(v), cx + cos * (r * 0.54), cy + sin * (r * 0.54));
+  }
+ }
+
+ const showValue = active && hasRolled;
+ const dispNum = showValue ? Math.max(1, Math.min(maxSides, Math.round(currentVal))) : '—';
+ const boxW = size * 0.28;
+ const boxH = size * 0.21;
+ const boxTop = cy + r * 0.38;
+
+ gCtx.fillStyle = '#1b120a';
+ gCtx.fillRect(cx - boxW / 2, boxTop, boxW, boxH);
+ gCtx.strokeStyle = '#8c632e';
+ gCtx.lineWidth = 1.1;
+ gCtx.strokeRect(cx - boxW / 2, boxTop, boxW, boxH);
+
+ gCtx.fillStyle = showValue ? '#f5d996' : '#7d6c4e';
+ gCtx.font = `bold ${Math.round(size * 0.135)}px "Courier New", monospace`;
+ gCtx.fillText(String(dispNum), cx, boxTop + boxH / 2 + 1);
+
+ const clamped = Math.max(1, Math.min(maxSides, currentVal));
+ const needleAng = startAng + ((clamped - 1) / (maxSides - 1)) * sweep;
+ const needleColor = (showValue && Math.round(clamped) === maxSides) ? '#1c6b34' : (showValue && Math.round(clamped) === 1 && maxSides === 20) ? '#9e241b' : '#1c140d';
+ drawNeedle(gCtx, cx, cy, r, needleAng, needleColor, size * 0.065);
+}
+
+function drawDigitDial(gCtx, size, value, active = true, hasRolled = true) {
+ const { cx, cy, r } = drawGaugeBase(gCtx, size, active);
+ const startAng = Math.PI * 0.75;
+ const sweep = Math.PI * 1.5;
+
+ gCtx.fillStyle = '#23170d';
+ gCtx.strokeStyle = '#23170d';
+ gCtx.textAlign = 'center';
+ gCtx.textBaseline = 'middle';
+ gCtx.font = `bold ${Math.round(size * 0.13)}px "Courier New", monospace`;
+
+ for (let i = 0; i < 10; i++) {
+  const frac = i / 9;
+  const ang = startAng + frac * sweep;
+  const cos = Math.cos(ang), sin = Math.sin(ang);
+
+  gCtx.lineWidth = i % 2 === 0 ? 1.5 : 1;
+  gCtx.beginPath();
+  gCtx.moveTo(cx + cos * (r * 0.75), cy + sin * (r * 0.75));
+  gCtx.lineTo(cx + cos * (r * 0.92), cy + sin * (r * 0.92));
+  gCtx.stroke();
+
+  gCtx.fillText(String(i), cx + cos * (r * 0.55), cy + sin * (r * 0.55));
+ }
+
+ const showValue = active && hasRolled;
+ const digit = showValue ? (Math.floor(value + 0.05) % 10) : '—';
+ const boxW = size * 0.26;
+ const boxH = size * 0.21;
+ const boxTop = cy + r * 0.38;
+
+ gCtx.fillStyle = '#1b120a';
+ gCtx.fillRect(cx - boxW / 2, boxTop, boxW, boxH);
+ gCtx.strokeStyle = '#8c632e';
+ gCtx.lineWidth = 1.1;
+ gCtx.strokeRect(cx - boxW / 2, boxTop, boxW, boxH);
+
+ gCtx.fillStyle = showValue ? '#f5d996' : '#7d6c4e';
+ gCtx.font = `bold ${Math.round(size * 0.14)}px "Courier New", monospace`;
+ gCtx.fillText(String(digit), cx, boxTop + boxH / 2 + 1);
+
+ const clamped = Math.max(0, Math.min(9, value));
+ const needleAng = startAng + (clamped / 9) * sweep;
+ drawNeedle(gCtx, cx, cy, r, needleAng, '#1c140d', size * 0.065);
+}
+
+/* ================= TAMBURO CILINDRICO CON IMMAGINI (left.png + 00..09 + right.png) ================= */
+function createCylinderModifier(container, onChange) {
+ const state = { sign: '+', tens: 0, units: 0 };
+
+ function getValue() {
+  const mag = state.tens * 10 + state.units;
+  if (mag === 0) return 0;
+  return state.sign === '-' ? -mag : mag;
+ }
+
+ const signBtn = document.createElement('div');
+ signBtn.className = 'sign-toggle-btn';
+ signBtn.title = 'Commuta segno modificatore (+/-)';
+ const signImg = document.createElement('img');
+ signImg.src = IMG_PLUS;
+ signImg.alt = '+';
+ signBtn.appendChild(signImg);
+
+ signBtn.addEventListener('click', () => {
+  Sound.playBreaker();
+  state.sign = state.sign === '+' ? '-' : '+';
+  signImg.src = state.sign === '+' ? IMG_PLUS : IMG_MINUS;
+  signImg.alt = state.sign;
+  onChange(getValue());
+ });
+
+ const assembly = document.createElement('div');
+ assembly.className = 'drum-assembly';
+
+ const leftCap = document.createElement('img');
+ leftCap.className = 'drum-cap';
+ leftCap.src = IMG_DRUM_LEFT;
+ leftCap.alt = '';
+ leftCap.draggable = false;
+
+ const rightCap = document.createElement('img');
+ rightCap.className = 'drum-cap';
+ rightCap.src = IMG_DRUM_RIGHT;
+ rightCap.alt = '';
+ rightCap.draggable = false;
+
+ function createDigitWheelImg(key, titleText) {
+  const wheelImg = document.createElement('img');
+  wheelImg.className = 'drum-wheel-img';
+  wheelImg.title = titleText;
+  wheelImg.draggable = false;
+
+  function renderDigit() {
+   setDrumDigitImage(wheelImg, state[key]);
+  }
+
+  function step(delta) {
+   Sound.wheelTick();
+   state[key] = (state[key] + delta + 10) % 10;
+   renderDigit();
+   onChange(getValue());
+  }
+
+  wheelImg.addEventListener('wheel', e => {
+   e.preventDefault();
+   if (e.deltaY < 0) step(1);
+   else if (e.deltaY > 0) step(-1);
+  }, { passive: false });
+
+  let dragging = false;
+  let lastY = 0;
+  let accumY = 0;
+  const STEP_PX = 14;
+
+  function onPointerDown(e) {
+   dragging = true;
+   lastY = e.clientY;
+   accumY = 0;
+   wheelImg.setPointerCapture(e.pointerId);
+  }
+
+  function onPointerMove(e) {
+   if (!dragging) return;
+   const dy = e.clientY - lastY;
+   lastY = e.clientY;
+   accumY += dy;
+
+   while (accumY <= -STEP_PX) {
+    accumY += STEP_PX;
+    step(1);
+   }
+   while (accumY >= STEP_PX) {
+    accumY -= STEP_PX;
+    step(-1);
+   }
+  }
+
+  function onPointerUp(e) {
+   if (!dragging) return;
+   dragging = false;
+   try { wheelImg.releasePointerCapture(e.pointerId); } catch (_) {}
+  }
+
+  wheelImg.addEventListener('pointerdown', onPointerDown);
+  wheelImg.addEventListener('pointermove', onPointerMove);
+  wheelImg.addEventListener('pointerup', onPointerUp);
+  wheelImg.addEventListener('pointercancel', onPointerUp);
+
+  renderDigit();
+  return { wheelImg, renderDigit };
+ }
+
+ const tensWheel = createDigitWheelImg('tens', 'Decine modificatore: trascina in alto (+1) o in basso (-1)');
+ const unitsWheel = createDigitWheelImg('units', 'Unità modificatore: trascina in alto (+1) o in basso (-1)');
+
+ assembly.append(leftCap, tensWheel.wheelImg, unitsWheel.wheelImg, rightCap);
+ container.append(signBtn, assembly);
+
+ return {
+  getValue,
+  reset() {
+   state.sign = '+';
+   state.tens = 0;
+   state.units = 0;
+   signImg.src = IMG_PLUS;
+   signImg.alt = '+';
+   tensWheel.renderDigit();
+   unitsWheel.renderDigit();
+  }
+ };
+}
+
+/* ================= STATO GLOBALE DEI DADI ================= */
+const DIE_TYPES = [4, 6, 8, 10, 12];
+const rowsState = [];
+
+const standardRowsContainer = $('standardRows');
+
+DIE_TYPES.forEach(sides => {
+ const panel = document.createElement('div');
+ panel.className = 'bronze-panel';
+ panel.innerHTML = `<span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>`;
+
+ const grid = document.createElement('div');
+ grid.className = 'dice-row-grid';
+
+ const leftCtrl = document.createElement('div');
+ leftCtrl.className = 'row-left-ctrl';
+
+ const badge = document.createElement('div');
+ badge.className = 'die-badge';
+ badge.textContent = `d${sides}`;
+
+ const rotSwitch = document.createElement('div');
+ rotSwitch.className = 'rotary-switch';
+ rotSwitch.title = 'ON: seleziona in cascata dal 1° dado · OFF: seleziona singolo dado';
+ rotSwitch.innerHTML = `
+  <div class="rotary-labels"><span>OFF</span><span>ON</span></div>
+  <div class="rotary-dial">
+   <div class="rotary-arm" style="transform:rotate(42deg)"></div>
+   <div class="rotary-pivot"></div>
+  </div>
+ `;
+
+ leftCtrl.append(badge, rotSwitch);
+
+ const bank = document.createElement('div');
+ bank.className = 'gauges-bank';
+
+ const diceUnits = [];
+ for (let i = 0; i < 10; i++) {
+  const unit = document.createElement('div');
+  unit.className = 'die-unit inactive';
+
+  const cvs = document.createElement('canvas');
+  cvs.width = 104;
+  cvs.height = 104;
+
+  const lever = document.createElement('div');
+  lever.className = 'img-toggle-h';
+  lever.title = `Attiva/Disattiva dado #${i + 1} (d${sides})`;
+  lever.innerHTML = `<img src="${IMG_H_OFF}" alt="OFF">`;
+
+  unit.append(cvs, lever);
+  bank.appendChild(unit);
+
+  diceUnits.push({
+   index: i,
+   active: false,
+   rolled: false,
+   currentVal: 1,
+   targetVal: 1,
+   unitEl: unit,
+   leverEl: lever,
+   canvas: cvs,
+   ctx: cvs.getContext('2d')
+  });
+ }
+
+ const rightCtrl = document.createElement('div');
+ rightCtrl.className = 'row-right-ctrl';
+
+ const drumGroup = document.createElement('div');
+ drumGroup.className = 'drum-group';
+ const wheelsWrap = document.createElement('div');
+ wheelsWrap.className = 'cylinder-bank';
+ drumGroup.appendChild(wheelsWrap);
+
+ const sumBox = document.createElement('div');
+ sumBox.className = 'row-sum-box';
+ sumBox.innerHTML = `<span class="drum-caption">SUBTOT</span>`;
+ const readout = document.createElement('div');
+ readout.className = 'mech-readout';
+ readout.textContent = '—';
+ sumBox.appendChild(readout);
+
+ rightCtrl.append(drumGroup, sumBox);
+
+ grid.append(leftCtrl, bank, rightCtrl);
+ panel.appendChild(grid);
+ standardRowsContainer.appendChild(panel);
+
+ const rowObj = {
+  sides,
+  cascadeOn: true,
+  armEl: rotSwitch.querySelector('.rotary-arm'),
+  dice: diceUnits,
+  readoutEl: readout,
+  modWheel: null
+ };
+
+ rowObj.modWheel = createCylinderModifier(wheelsWrap, () => recomputeTotals());
+
+ rotSwitch.addEventListener('click', () => {
+  Sound.playButtonPress();
+  rowObj.cascadeOn = !rowObj.cascadeOn;
+  rowObj.armEl.style.transform = rowObj.cascadeOn ? 'rotate(42deg)' : 'rotate(-42deg)';
+ });
+
+ diceUnits.forEach((d, idx) => {
+  d.leverEl.addEventListener('click', () => {
+   Sound.playBreaker();
+   if (rowObj.cascadeOn) {
+    const activeCount = rowObj.dice.filter(x => x.active).length;
+    const isExactEnd = d.active && activeCount === idx + 1;
+    rowObj.dice.forEach((item, j) => {
+     setDieActive(item, isExactEnd ? false : j <= idx);
+    });
+   } else {
+    setDieActive(d, !d.active);
+   }
+
+   if (rowObj.dice.some(x => x.active)) {
+    deactivateAllD20();
+    deactivateD100();
+   }
+
+   recomputeTotals();
+  });
+ });
+
+ rowsState.push(rowObj);
+});
+
+/* Scala il gruppo tamburo + selettore mod all'80% dell'altezza del riquadro dadi */
+function syncModifierHeights() {
+ const MOD_SCALE = 0.80;
+
+ document.querySelectorAll('.dice-row-grid').forEach(grid => {
+  const dieBox = grid.querySelector('.die-unit');
+  const drumGroup = grid.querySelector('.drum-group');
+  if (dieBox && drumGroup) {
+   const h = dieBox.getBoundingClientRect().height;
+   if (h > 20) drumGroup.style.height = `${Math.round(h * MOD_SCALE)}px`;
+  }
+ });
+
+ const d20Box = $('d20Unit0');
+ const d20DrumGroup = document.querySelector('.d20-stage .drum-group');
+ if (d20Box && d20DrumGroup) {
+  const h20 = d20Box.getBoundingClientRect().height;
+  if (h20 > 20) d20DrumGroup.style.height = `${Math.round(h20 * MOD_SCALE)}px`;
+ }
+}
+window.addEventListener('resize', syncModifierHeights);
+
+function setDieActive(dieObj, isActive) {
+ dieObj.active = isActive;
+ dieObj.unitEl.classList.toggle('inactive', !isActive);
+ setHorizontalToggleImg(dieObj.leverEl, isActive);
+}
+
+function deactivateAllStandardDice() {
+ rowsState.forEach(row => {
+  row.dice.forEach(d => {
+   setDieActive(d, false);
+  });
+ });
+}
+
+/* ================= STATO 2D20 (S / N / V) ================= */
+const d20State = {
+ mode: 'N',
+ dice: [0, 1].map(i => ({
+  index: i,
+  active: false,
+  rolled: false,
+  currentVal: 1,
+  targetVal: 1,
+  unitEl: $('d20Unit' + i),
+  leverEl: $('d20Lev' + i),
+  canvas: $('d20Canvas' + i),
+  ctx: $('d20Canvas' + i).getContext('2d')
+ })),
+ modWheel: null
+};
+
+d20State.modWheel = createCylinderModifier($('d20ModWheels'), () => recomputeTotals());
+
+function setD20DieActive(idx, active) {
+ const d = d20State.dice[idx];
+ d.active = active;
+ d.unitEl.classList.toggle('inactive', !active);
+ setHorizontalToggleImg(d.leverEl, active);
+}
+
+function deactivateAllD20() {
+ setD20DieActive(0, false);
+ setD20DieActive(1, false);
+}
+
+function applyD20Mode(mode, activateDice = true) {
+ d20State.mode = mode;
+ const angles = { S: -45, N: 0, V: 45 };
+ const labels = { S: 'SVANTAGGIO', N: 'NORMALE', V: 'VANTAGGIO' };
+ $('d20Arm').style.transform = `rotate(${angles[mode]}deg)`;
+ $('d20ModeTag').textContent = labels[mode];
+
+ if (activateDice) {
+  deactivateAllStandardDice();
+  deactivateD100();
+  if (mode === 'S' || mode === 'V') {
+   setD20DieActive(0, true);
+   setD20DieActive(1, true);
+  } else {
+   setD20DieActive(0, true);
+   setD20DieActive(1, false);
+  }
+ }
+ recomputeTotals();
+}
+
+$('d20ModeSwitch').addEventListener('click', () => {
+ Sound.playButtonPress();
+ const order = ['S', 'N', 'V'];
+ const next = order[(order.indexOf(d20State.mode) + 1) % 3];
+ applyD20Mode(next, true);
+});
+
+[0, 1].forEach(idx => {
+ $('d20Lev' + idx).addEventListener('click', () => {
+  Sound.playBreaker();
+  const nextActive = !d20State.dice[idx].active;
+  setD20DieActive(idx, nextActive);
+  if (nextActive) {
+   deactivateAllStandardDice();
+   deactivateD100();
+  }
+  recomputeTotals();
+ });
+});
+
+/* ================= STATO D100 ================= */
+const d100State = {
+ active: false,
+ rolled: false,
+ tensCurrent: 0,
+ tensTarget: 0,
+ unitsCurrent: 0,
+ unitsTarget: 0,
+ tensCtx: $('d100Tens').getContext('2d'),
+ unitsCtx: $('d100Units').getContext('2d')
+};
+
+function getD100NumericValue(t, u) {
+ return (t === 0 && u === 0) ? 100 : (t * 10 + u);
+}
+
+function formatD100(t, u) {
+ const val = getD100NumericValue(t, u);
+ return String(val).padStart(2, '0') + '%';
+}
+
+function setD100Active(isActive) {
+ d100State.active = isActive;
+ $('d100DialsWrap').classList.toggle('inactive', !isActive);
+ setHorizontalToggleImg($('d100Lev'), isActive);
+ if (!isActive) {
+  $('d100Readout').textContent = 'OFF';
+ } else {
+  $('d100Readout').textContent = d100State.rolled
+   ? formatD100(d100State.tensTarget, d100State.unitsTarget)
+   : '—';
+ }
+}
+
+function deactivateD100() {
+ setD100Active(false);
+}
+
+$('d100Lev').addEventListener('click', () => {
+ Sound.playBreaker();
+ const nextActive = !d100State.active;
+ setD100Active(nextActive);
+ if (nextActive) {
+  deactivateAllStandardDice();
+  deactivateAllD20();
+ }
+ recomputeTotals();
+});
+
+/* ================= STATO MONETA TESTA O CROCE ================= */
+const coinState = {
+ angleY: 0,
+ targetAngleY: 0,
+ spinning: false,
+ result: 'TESTA'
+};
+
+function setCoinInitialFace(isHeads) {
+ coinState.result = isHeads ? 'TESTA' : 'CROCE';
+ coinState.angleY = isHeads ? 0 : 180;
+ coinState.targetAngleY = coinState.angleY;
+ $('coinBody').style.transform = `translateY(0px) rotateY(${coinState.angleY}deg)`;
+ $('coinReadout').textContent = coinState.result;
+}
+
+function flipCoin() {
+ if (coinState.spinning) return;
+ Sound.playCoin();
+ coinState.spinning = true;
+
+ const isHeads = Math.random() < 0.5;
+ const extraSpins = (4 + Math.floor(Math.random() * 3)) * 360;
+ const baseCurrent = Math.round(coinState.angleY / 360) * 360;
+ coinState.targetAngleY = baseCurrent + extraSpins + (isHeads ? 0 : 180);
+
+ const startAngle = coinState.angleY;
+ const deltaAngle = coinState.targetAngleY - startAngle;
+ const duration = 950;
+ const t0 = performance.now();
+
+ function animCoin(now) {
+  const p = Math.min(1, (now - t0) / duration);
+  const ease = 1 - Math.pow(1 - p, 3);
+  coinState.angleY = startAngle + deltaAngle * ease;
+  const lift = Math.sin(p * Math.PI) * 14;
+  $('coinBody').style.transform = `translateY(${-lift}px) rotateY(${coinState.angleY}deg)`;
+
+  if (p < 1) {
+   requestAnimationFrame(animCoin);
+  } else {
+   coinState.spinning = false;
+   coinState.result = isHeads ? 'TESTA' : 'CROCE';
+   $('coinReadout').textContent = coinState.result;
+  }
+ }
+ requestAnimationFrame(animCoin);
+}
+
+$('coinFlipBtn').addEventListener('click', flipCoin);
+
+/* ================= TOTALI (3 MANOMETRI) ================= */
+const totalGauges = [0, 1, 2].map(i => ({
+ canvas: $('tot' + i),
+ ctx: $('tot' + i).getContext('2d'),
+ currentVal: 0,
+ targetVal: 0
+}));
+
+let grandTotal = 0;
+let anyRolledInActiveGroup = false;
+
+function recomputeTotals() {
+ let sumAll = 0;
+ let hasAnyRolled = false;
+
+ rowsState.forEach(row => {
+  const activeDice = row.dice.filter(d => d.active);
+  const mod = row.modWheel.getValue();
+  if (activeDice.length === 0) {
+   row.readoutEl.textContent = mod !== 0 ? (mod > 0 ? `+${mod}` : `${mod}`) : '—';
+   if (mod !== 0) sumAll += mod;
+  } else if (!activeDice.every(d => d.rolled)) {
+   row.readoutEl.textContent = '—';
+  } else {
+   hasAnyRolled = true;
+   const rawSum = activeDice.reduce((acc, d) => acc + Math.round(d.targetVal), 0);
+   const rowTot = rawSum + mod;
+   row.readoutEl.textContent = String(rowTot);
+   sumAll += rowTot;
+  }
+ });
+
+ const d0 = d20State.dice[0];
+ const d1 = d20State.dice[1];
+ const d20Mod = d20State.modWheel.getValue();
+ d0.unitEl.classList.remove('chosen');
+ d1.unitEl.classList.remove('chosen');
+
+ const activeD20 = d20State.dice.filter(d => d.active);
+ if (activeD20.length === 0) {
+  $('d20Readout').textContent = d20Mod !== 0 ? (d20Mod > 0 ? `+${d20Mod}` : `${d20Mod}`) : '—';
+  if (d20Mod !== 0) sumAll += d20Mod;
+ } else if (!activeD20.every(d => d.rolled)) {
+  $('d20Readout').textContent = '—';
+ } else if (activeD20.length === 1) {
+  hasAnyRolled = true;
+  const val = Math.round(activeD20[0].targetVal) + d20Mod;
+  activeD20[0].unitEl.classList.add('chosen');
+  $('d20Readout').textContent = String(val);
+  sumAll += val;
+ } else {
+  hasAnyRolled = true;
+  const v0 = Math.round(d0.targetVal);
+  const v1 = Math.round(d1.targetVal);
+  let chosenVal = 0;
+  if (d20State.mode === 'V') {
+   chosenVal = Math.max(v0, v1);
+   (v0 >= v1 ? d0 : d1).unitEl.classList.add('chosen');
+  } else if (d20State.mode === 'S') {
+   chosenVal = Math.min(v0, v1);
+   (v0 <= v1 ? d0 : d1).unitEl.classList.add('chosen');
+  } else {
+   chosenVal = v0 + v1;
+   d0.unitEl.classList.add('chosen');
+   d1.unitEl.classList.add('chosen');
+  }
+  const finalD20 = chosenVal + d20Mod;
+  $('d20Readout').textContent = String(finalD20);
+  sumAll += finalD20;
+ }
+
+ if (d100State.active && d100State.rolled) {
+  hasAnyRolled = true;
+  sumAll += getD100NumericValue(d100State.tensTarget, d100State.unitsTarget);
+ }
+
+ anyRolledInActiveGroup = hasAnyRolled || sumAll !== 0;
+ grandTotal = Math.max(0, Math.min(999, sumAll));
+ $('totalExactTag').textContent = anyRolledInActiveGroup ? String(grandTotal).padStart(3, '0') : '—';
+
+ totalGauges[0].targetVal = anyRolledInActiveGroup ? (grandTotal % 10) : 0;
+ totalGauges[1].targetVal = anyRolledInActiveGroup ? (Math.floor(grandTotal / 10) % 10) : 0;
+ totalGauges[2].targetVal = anyRolledInActiveGroup ? (Math.floor(grandTotal / 100) % 10) : 0;
+}
+
+/* ================= INTERRUTTORE GENERALE ================= */
+let masterBusy = false;
+
+function setMasterSwitchVisual(isOn) {
+ const btn = $('masterSwitch');
+ const img = $('masterSwitchImg');
+ const cap = $('masterCaption');
+
+ btn.classList.toggle('active', isOn);
+ img.src = isOn ? IMG_V_ON : IMG_V_OFF;
+ img.alt = isOn ? 'Interruttore Generale ON' : 'Interruttore Generale OFF';
+ cap.textContent = isOn ? 'IN PRESSIONE' : 'APRI VALVOLA';
+}
+
+function rollActiveDice() {
+ rowsState.forEach(row => {
+  row.dice.forEach(d => {
+   if (d.active) {
+    d.rolled = true;
+    d.currentVal = 1 + Math.random() * (row.sides - 1);
+    d.targetVal = 1 + Math.floor(Math.random() * row.sides);
+   }
+  });
+ });
+
+ d20State.dice.forEach(d => {
+  if (d.active) {
+   d.rolled = true;
+   d.currentVal = 1 + Math.random() * 19;
+   d.targetVal = 1 + Math.floor(Math.random() * 20);
+  }
+ });
+
+ if (d100State.active) {
+  d100State.rolled = true;
+  d100State.tensCurrent = Math.random() * 9;
+  d100State.unitsCurrent = Math.random() * 9;
+  d100State.tensTarget = Math.floor(Math.random() * 10);
+  d100State.unitsTarget = Math.floor(Math.random() * 10);
+  $('d100Readout').textContent = formatD100(d100State.tensTarget, d100State.unitsTarget);
+ }
+
+ recomputeTotals();
+}
+
+function activateMasterSwitch() {
+ if (masterBusy) return;
+ masterBusy = true;
+
+ setMasterSwitchVisual(true);
+
+ Sound.playMasterLaunchSequence(
+  () => {
+   rollActiveDice();
+  },
+  () => {
+   setMasterSwitchVisual(false);
+   masterBusy = false;
+  }
+ );
+}
+
+$('masterSwitch').addEventListener('click', activateMasterSwitch);
+$('masterSwitch').addEventListener('keydown', e => {
+ if (e.code === 'Space' || e.code === 'Enter') {
+  e.preventDefault();
+  activateMasterSwitch();
+ }
+});
+
+/* ================= PULSANTI HEADER ================= */
+$('sfxBtn').addEventListener('click', () => {
+ Sound.init();
+ const isOn = Sound.toggle();
+ $('sfxBtn').textContent = isOn ? '🔔 Suoni: ON' : '🔕 Suoni: OFF';
+ $('sfxBtn').classList.toggle('muted', !isOn);
+});
+
+$('resetAllBtn').addEventListener('click', () => {
+ Sound.playButtonPress();
+ rowsState.forEach(row => {
+  row.cascadeOn = true;
+  row.armEl.style.transform = 'rotate(42deg)';
+  row.modWheel.reset();
+  row.dice.forEach(d => {
+   setDieActive(d, false);
+   d.rolled = false;
+   d.targetVal = 1;
+  });
+ });
+
+ d20State.modWheel.reset();
+ applyD20Mode('N', false);
+ deactivateAllD20();
+ d20State.dice.forEach(d => {
+  d.rolled = false;
+  d.targetVal = 1;
+ });
+
+ d100State.rolled = false;
+ deactivateD100();
+ d100State.tensTarget = 0;
+ d100State.unitsTarget = 0;
+
+ setCoinInitialFace(Math.random() < 0.5);
+
+ masterBusy = false;
+ setMasterSwitchVisual(false);
+ recomputeTotals();
+});
+
+/* ================= LOOP DI ANIMAZIONE MANOMETRI ================= */
+let lastTime = performance.now();
+
+function animateDials(now) {
+ const dt = Math.min(0.05, (now - lastTime) / 1000 || 0.016);
+ lastTime = now;
+ const speed = Math.min(1, dt * 15);
+
+ rowsState.forEach(row => {
+  row.dice.forEach(d => {
+   const diff = d.targetVal - d.currentVal;
+   if (Math.abs(diff) < 0.01) d.currentVal = d.targetVal;
+   else d.currentVal += diff * speed;
+   drawDieDial(d.ctx, d.canvas.width, row.sides, d.currentVal, d.active, d.rolled);
+  });
+ });
+
+ d20State.dice.forEach(d => {
+  const diff = d.targetVal - d.currentVal;
+  if (Math.abs(diff) < 0.01) d.currentVal = d.targetVal;
+  else d.currentVal += diff * speed;
+  drawDieDial(d.ctx, d.canvas.width, 20, d.currentVal, d.active, d.rolled);
+ });
+
+ const tDiff = d100State.tensTarget - d100State.tensCurrent;
+ d100State.tensCurrent = Math.abs(tDiff) < 0.01 ? d100State.tensTarget : d100State.tensCurrent + tDiff * speed;
+ const uDiff = d100State.unitsTarget - d100State.unitsCurrent;
+ d100State.unitsCurrent = Math.abs(uDiff) < 0.01 ? d100State.unitsTarget : d100State.unitsCurrent + uDiff * speed;
+ drawDigitDial(d100State.tensCtx, 90, d100State.tensCurrent, d100State.active, d100State.rolled);
+ drawDigitDial(d100State.unitsCtx, 90, d100State.unitsCurrent, d100State.active, d100State.rolled);
+
+ totalGauges.forEach(g => {
+  const diff = g.targetVal - g.currentVal;
+  g.currentVal = Math.abs(diff) < 0.01 ? g.targetVal : g.currentVal + diff * speed;
+  drawDigitDial(g.ctx, g.canvas.width, g.currentVal, true, anyRolledInActiveGroup);
+ });
+
+ requestAnimationFrame(animateDials);
+}
+
+setCoinInitialFace(Math.random() < 0.5);
+recomputeTotals();
+requestAnimationFrame(() => {
+ syncModifierHeights();
+ requestAnimationFrame(animateDials);
+});
+})();
+</script>
+</body>
+</html>
