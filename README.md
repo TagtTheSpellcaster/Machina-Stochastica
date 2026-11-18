@@ -11,6 +11,8 @@
 
 Machina Stochastica e una web application single-file a tema steampunk progettata per simulare il lancio di dadi poliedrici, tiri percentuali e lanci della moneta attraverso manometri analogici animati, tamburi meccanici per i modificatori ed effetti sonori sincronizzati.
 
+[Puoi giocarci qui](https://tagtthespellcaster.github.io/Machina-Stochastica/)
+
 ---
 
 ## Caratteristiche principali
