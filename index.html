@@ -802,28 +802,30 @@ function setHorizontalToggleImg(el, isOn) {
  }
 }
 
-/* ================= MOTORE SONORO ================= */
+/* ================= MOTORE SONORO (WEB AUDIO GAPLESS PER ENGINE.MP3) ================= */
 const Sound = (() => {
  let ctx = null;
  let sfxEnabled = true;
  let ambientEnabled = true;
 
- const engineAudio  = new Audio('engine.mp3');
+ /* Livello sonoro engine.mp3 al 70%:
+    Guadagno (dB) = 60 * log10(70 / 100) = -9.294189 dB -> ampiezza lineare = (70 / 100)^3 = 0.343 */
+ const ENGINE_PERCENT = 70;
+ const ENGINE_GAIN_DB = 60 * Math.log10(ENGINE_PERCENT / 100);
+ const ENGINE_LINEAR_VOLUME = Math.max(0, Math.min(1, Math.pow(10, ENGINE_GAIN_DB / 20)));
+
+ /* Nodi Web Audio per loop continuo senza stacchi di engine.mp3 */
+ let engineArrayBufferPromise = null;
+ let engineAudioBuffer = null;
+ let engineDecoding = false;
+ let engineSourceNode = null;
+ let engineGainNode = null;
+
  const clankAudio   = new Audio('clank.mp3');
  const steamAudio   = new Audio('steam-hissing.mp3');
  const breakerAudio = new Audio('breaker-switch.mp3');
  const buttonAudio  = new Audio('button-press.mp3');
  const coinAudio    = new Audio('coin.mp3');
-
- /* Livello sonoro engine.mp3 al 70%:
-    Guadagno (dB) = 60 * log10(70 / 100) = -9.294189 dB -> ampiezza lineare = (70 / 100)^3 = 0.343 */
- const ENGINE_PERCENT = 70;
- const ENGINE_GAIN_DB = 60 * Math.log10(ENGINE_PERCENT / 100);
- const ENGINE_LINEAR_VOLUME = Math.pow(10, ENGINE_GAIN_DB / 20);
-
- engineAudio.loop = true;
- engineAudio.preload = 'auto';
- engineAudio.volume = Math.max(0, Math.min(1, ENGINE_LINEAR_VOLUME));
 
  [clankAudio, steamAudio, breakerAudio, buttonAudio, coinAudio].forEach(a => {
   a.preload = 'auto';
@@ -834,21 +836,145 @@ const Sound = (() => {
    const AC = window.AudioContext || window.webkitAudioContext;
    if (AC) ctx = new AC();
   }
-  if (ctx && ctx.state === 'suspended') ctx.resume();
+  if (ctx && ctx.state === 'suspended') {
+   ctx.resume().catch(() => {});
+  }
+ }
+
+ /* Pre-carica i byte grezzi di engine.mp3 in memoria prima ancora dell'interazione */
+ function fetchEngineRaw() {
+  if (!engineArrayBufferPromise) {
+   engineArrayBufferPromise = fetch('engine.mp3')
+    .then(res => {
+     if (!res.ok) throw new Error('HTTP ' + res.status);
+     return res.arrayBuffer();
+    })
+    .catch(() => null);
+  }
+  return engineArrayBufferPromise;
+ }
+
+ /* Decodifica i campioni PCM e individua gli eventuali campioni di encoder-delay/padding MP3 */
+ function decodeAndPrepareEngineBuffer() {
+  if (engineAudioBuffer || engineDecoding || !ctx) return;
+  engineDecoding = true;
+  fetchEngineRaw().then(raw => {
+   if (!raw || !ctx) {
+    engineDecoding = false;
+    return;
+   }
+   ctx.decodeAudioData(raw.slice(0))
+    .then(decoded => {
+     engineAudioBuffer = decoded;
+     engineDecoding = false;
+     if (ambientEnabled) startEngineGaplessLoop();
+    })
+    .catch(() => {
+     engineDecoding = false;
+    });
+  });
+ }
+
+ function computeTrimmedLoopBounds(buffer) {
+  const sr = buffer.sampleRate;
+  const len = buffer.length;
+  const maxTrimSamples = Math.min(Math.floor(sr * 0.08), Math.floor(len * 0.1));
+  const threshold = 0.002;
+  let startSample = 0;
+  let endSample = len;
+
+  for (let i = 0; i < maxTrimSamples; i++) {
+   let peak = 0;
+   for (let ch = 0; ch < buffer.numberOfChannels; ch++) {
+    const v = Math.abs(buffer.getChannelData(ch)[i]);
+    if (v > peak) peak = v;
+   }
+   if (peak > threshold) {
+    startSample = i;
+    break;
+   }
+  }
+
+  for (let i = len - 1; i >= len - maxTrimSamples; i--) {
+   let peak = 0;
+   for (let ch = 0; ch < buffer.numberOfChannels; ch++) {
+    const v = Math.abs(buffer.getChannelData(ch)[i]);
+    if (v > peak) peak = v;
+   }
+   if (peak > threshold) {
+    endSample = i + 1;
+    break;
+   }
+  }
+
+  if (endSample - startSample < sr * 0.1) {
+   return { loopStart: 0, loopEnd: buffer.duration };
+  }
+  return {
+   loopStart: startSample / sr,
+   loopEnd: endSample / sr
+  };
+ }
+
+ function startEngineGaplessLoop() {
+  if (!ambientEnabled) return;
+  init();
+  if (!ctx) return;
+
+  if (!engineAudioBuffer) {
+   decodeAndPrepareEngineBuffer();
+   return;
+  }
+
+  if (engineSourceNode) {
+   if (engineGainNode) {
+    engineGainNode.gain.setTargetAtTime(ENGINE_LINEAR_VOLUME, ctx.currentTime, 0.02);
+   }
+   return;
+  }
+
+  if (!engineGainNode) {
+   engineGainNode = ctx.createGain();
+   engineGainNode.gain.setValueAtTime(ENGINE_LINEAR_VOLUME, ctx.currentTime);
+   engineGainNode.connect(ctx.destination);
+  } else {
+   engineGainNode.gain.setValueAtTime(ENGINE_LINEAR_VOLUME, ctx.currentTime);
+  }
+
+  const { loopStart, loopEnd } = computeTrimmedLoopBounds(engineAudioBuffer);
+  const src = ctx.createBufferSource();
+  src.buffer = engineAudioBuffer;
+  src.loop = true;
+  src.loopStart = loopStart;
+  src.loopEnd = loopEnd;
+  src.connect(engineGainNode);
+  src.onended = () => {
+   if (engineSourceNode === src) engineSourceNode = null;
+  };
+  src.start(0, loopStart);
+  engineSourceNode = src;
+ }
+
+ function stopEngineGaplessLoop() {
+  if (engineSourceNode) {
+   try {
+    engineSourceNode.onended = null;
+    engineSourceNode.stop(0);
+    engineSourceNode.disconnect();
+   } catch (_) {}
+   engineSourceNode = null;
+  }
  }
 
  function ensureAmbientPlaying() {
   if (!ambientEnabled) return;
-  if (engineAudio.paused) {
-   const p = engineAudio.play();
-   if (p !== undefined) p.catch(() => {});
-  }
+  startEngineGaplessLoop();
  }
 
  function toggleAmbient() {
   ambientEnabled = !ambientEnabled;
   if (!ambientEnabled) {
-   engineAudio.pause();
+   stopEngineGaplessLoop();
   } else {
    ensureAmbientPlaying();
   }
@@ -981,7 +1107,8 @@ const Sound = (() => {
   }
  }
 
- /* Avvio automatico al caricamento + sblocco alla prima interazione utente se richiesto dal browser */
+ /* Avvia subito fetch/decodifica e aggancia sblocco al primo evento utente */
+ fetchEngineRaw();
  ensureAmbientPlaying();
  ['pointerdown', 'keydown'].forEach(evt => {
   window.addEventListener(evt, () => {
