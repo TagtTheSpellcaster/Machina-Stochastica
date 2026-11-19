@@ -65,41 +65,7 @@ body{
  color:#c0a477;
  text-transform:uppercase;
 }
-.header-actions{display:flex;gap:10px;align-items:center}
-
-.audio-toggle-group{
- display:flex;
- align-items:center;
- gap:5px;
- background:#160f09;
- border:1.5px ridge #855e2c;
- padding:2px 6px;
- cursor:pointer;
-}
-.audio-toggle-group span{
- font:bold 9px "Courier New",monospace;
- letter-spacing:0.6px;
- color:#f0d18a;
- text-transform:uppercase;
-}
-.header-vert-switch{
- width:22px;
- aspect-ratio:576 / 800;
- height:auto;
- border-radius:2px;
- overflow:hidden;
- background:#1a1109;
- box-shadow:0 1px 3px #000c;
- transition:transform 0.08s ease;
- flex-shrink:0;
-}
-.audio-toggle-group:active .header-vert-switch{transform:scale(0.94)}
-.header-vert-switch img{
- width:100%;
- height:100%;
- object-fit:contain;
- display:block;
-}
+.header-actions{display:flex;gap:6px;align-items:center}
 
 button.mech-btn{
  font:bold 9px "Courier New",monospace;
@@ -113,6 +79,7 @@ button.mech-btn{
  cursor:pointer;
 }
 button.mech-btn:active{transform:translateY(1px);box-shadow:0 1px #17110b}
+button.mech-btn.muted{opacity:0.55;filter:grayscale(0.4)}
 
 /* PANNELLO IN BRONZO CON 4 VITI AGLI ANGOLI */
 .bronze-panel{
@@ -614,18 +581,8 @@ footer{
   </div>
   <div class="header-actions">
    <button class="mech-btn" id="resetAllBtn">↻ Azzera Tutto</button>
-   <div class="audio-toggle-group" id="ambientBtn" role="button" tabindex="0" title="Attiva/Disattiva suono di sottofondo (motore)">
-    <span>Suono</span>
-    <div class="header-vert-switch">
-     <img src="verton.png" alt="Suono ON" id="ambientSwitchImg">
-    </div>
-   </div>
-   <div class="audio-toggle-group" id="sfxBtn" role="button" tabindex="0" title="Attiva/Disattiva effetti sonori">
-    <span>Effetti</span>
-    <div class="header-vert-switch">
-     <img src="verton.png" alt="Effetti ON" id="sfxSwitchImg">
-    </div>
-   </div>
+   <button class="mech-btn" id="ambientBtn" title="Attiva/Disattiva suono di sottofondo (motore)">Suono: ON</button>
+   <button class="mech-btn" id="sfxBtn" title="Attiva/Disattiva effetti sonori">Effetti: ON</button>
   </div>
  </header>
 
@@ -711,7 +668,7 @@ footer{
    <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
    <div class="panel-label" style="width:100%"><span>Vapore</span><span>LANCIO</span></div>
    <div class="master-switch-stage">
-    <div class="master-switch-btn" id="masterSwitch" role="button" tabindex="0" title="Aziona l'interruttore generale (o premi Spazio)">
+    <div class="master-switch-btn" id="masterSwitch" role="button" tabindex="0" title="Aziona l'interruttore generale (o premi Spazio ovunque)">
      <img src="vertoff.png" alt="Interruttore Generale OFF" id="masterSwitchImg">
     </div>
     <span class="drum-caption" id="masterCaption">APRI VALVOLA</span>
@@ -744,7 +701,7 @@ footer{
 
  <footer>
   <span>OFFICINA DEGLI ENIGMI · Machina N. 003</span>
-  <span>MACHINA STOCHASTICA · BREVETTO MECCANICO 1.14</span>
+  <span>MACHINA STOCHASTICA · BREVETTO MECCANICO 1.15</span>
  </footer>
 </main>
 
@@ -808,9 +765,9 @@ const Sound = (() => {
  let sfxEnabled = true;
  let ambientEnabled = true;
 
- /* Livello sonoro engine.mp3 al 70%:
-    Guadagno (dB) = 60 * log10(70 / 100) = -9.294189 dB -> ampiezza lineare = (70 / 100)^3 = 0.343 */
- const ENGINE_PERCENT = 70;
+ /* Livello sonoro engine.mp3 al 60%:
+    Guadagno (dB) = 60 * log10(60 / 100) = -13.3109 dB -> ampiezza lineare = (60 / 100)^3 = 0.216 */
+ const ENGINE_PERCENT = 60;
  const ENGINE_GAIN_DB = 60 * Math.log10(ENGINE_PERCENT / 100);
  const ENGINE_LINEAR_VOLUME = Math.max(0, Math.min(1, Math.pow(10, ENGINE_GAIN_DB / 20)));
 
@@ -1894,44 +1851,43 @@ $('masterSwitch').addEventListener('click', activateMasterSwitch);
 $('masterSwitch').addEventListener('keydown', e => {
  if (e.code === 'Space' || e.code === 'Enter') {
   e.preventDefault();
+  e.stopPropagation();
   activateMasterSwitch();
  }
 });
 
-/* ================= PULSANTI HEADER (SUONO & EFFETTI) ================= */
-function toggleAmbientControl() {
- const isOn = Sound.toggleAmbient();
- const img = $('ambientSwitchImg');
- img.src = isOn ? IMG_V_ON : IMG_V_OFF;
- img.alt = isOn ? 'Suono ON' : 'Suono OFF';
-}
-
-function toggleSfxControl() {
- Sound.init();
- const isOn = Sound.toggleSfx();
- const img = $('sfxSwitchImg');
- img.src = isOn ? IMG_V_ON : IMG_V_OFF;
- img.alt = isOn ? 'Effetti ON' : 'Effetti OFF';
- if (isOn) Sound.playBreaker();
-}
-
-$('ambientBtn').addEventListener('click', toggleAmbientControl);
-$('ambientBtn').addEventListener('keydown', e => {
- if (e.code === 'Space' || e.code === 'Enter') {
-  e.preventDefault();
-  toggleAmbientControl();
+/* Lancio globale tramite barra spaziatrice ovunque nella pagina (anche senza focus) */
+document.addEventListener('keydown', e => {
+ if (e.code !== 'Space' || e.repeat) return;
+ const tag = e.target && e.target.tagName ? e.target.tagName.toUpperCase() : '';
+ if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (e.target && e.target.isContentEditable)) {
+  return;
  }
+ e.preventDefault();
+ activateMasterSwitch();
 });
 
-$('sfxBtn').addEventListener('click', toggleSfxControl);
-$('sfxBtn').addEventListener('keydown', e => {
- if (e.code === 'Space' || e.code === 'Enter') {
-  e.preventDefault();
-  toggleSfxControl();
- }
+/* ================= PULSANTI HEADER (SUONO & EFFETTI) ================= */
+$('ambientBtn').addEventListener('click', () => {
+ const isOn = Sound.toggleAmbient();
+ const btn = $('ambientBtn');
+ btn.textContent = isOn ? 'Suono: ON' : 'Suono: OFF';
+ btn.classList.toggle('muted', !isOn);
+ btn.blur();
+});
+
+$('sfxBtn').addEventListener('click', () => {
+ Sound.init();
+ const isOn = Sound.toggleSfx();
+ const btn = $('sfxBtn');
+ btn.textContent = isOn ? 'Effetti: ON' : 'Effetti: OFF';
+ btn.classList.toggle('muted', !isOn);
+ btn.blur();
+ if (isOn) Sound.playBreaker();
 });
 
 $('resetAllBtn').addEventListener('click', () => {
+ $('resetAllBtn').blur();
  Sound.playButtonPress();
  rowsState.forEach(row => {
   row.cascadeOn = true;
