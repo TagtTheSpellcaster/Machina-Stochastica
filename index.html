@@ -65,7 +65,41 @@ body{
  color:#c0a477;
  text-transform:uppercase;
 }
-.header-actions{display:flex;gap:6px;align-items:center}
+.header-actions{display:flex;gap:10px;align-items:center}
+
+.audio-toggle-group{
+ display:flex;
+ align-items:center;
+ gap:5px;
+ background:#160f09;
+ border:1.5px ridge #855e2c;
+ padding:2px 6px;
+ cursor:pointer;
+}
+.audio-toggle-group span{
+ font:bold 9px "Courier New",monospace;
+ letter-spacing:0.6px;
+ color:#f0d18a;
+ text-transform:uppercase;
+}
+.header-vert-switch{
+ width:22px;
+ aspect-ratio:576 / 800;
+ height:auto;
+ border-radius:2px;
+ overflow:hidden;
+ background:#1a1109;
+ box-shadow:0 1px 3px #000c;
+ transition:transform 0.08s ease;
+ flex-shrink:0;
+}
+.audio-toggle-group:active .header-vert-switch{transform:scale(0.94)}
+.header-vert-switch img{
+ width:100%;
+ height:100%;
+ object-fit:contain;
+ display:block;
+}
 
 button.mech-btn{
  font:bold 9px "Courier New",monospace;
@@ -79,7 +113,6 @@ button.mech-btn{
  cursor:pointer;
 }
 button.mech-btn:active{transform:translateY(1px);box-shadow:0 1px #17110b}
-button.mech-btn.muted{opacity:0.55;filter:grayscale(0.4)}
 
 /* PANNELLO IN BRONZO CON 4 VITI AGLI ANGOLI */
 .bronze-panel{
@@ -237,7 +270,7 @@ button.mech-btn.muted{opacity:0.55;filter:grayscale(0.4)}
  filter:brightness(0.78) saturate(0.75);
 }
 
-/* SELETTORE IMMAGINE ORIZZONTALE: larghezza invariata, altezza ridotta al 90% (da ~23.8px a 21.4px) */
+/* SELETTORE IMMAGINE ORIZZONTALE: larghezza invariata, altezza ridotta al 90% */
 .img-toggle-h{
  width:40px;
  height:21.4px;
@@ -536,9 +569,7 @@ footer{
  letter-spacing:0.8px;
 }
 
-/* Adattamento automatico con scorrimento su schermi portatili bassi:
-   mantiene invariata l'altezza totale della riga riducendo al 90% l'altezza dei selettori
-   e destinando lo spazio recuperato ad ingrandire i quadranti dei manometri */
+/* Adattamento automatico con scorrimento su schermi portatili bassi */
 @media (max-height: 850px) {
  body {
   align-items: flex-start;
@@ -583,7 +614,18 @@ footer{
   </div>
   <div class="header-actions">
    <button class="mech-btn" id="resetAllBtn">↻ Azzera Tutto</button>
-   <button class="mech-btn" id="sfxBtn">🔔 Suoni: ON</button>
+   <div class="audio-toggle-group" id="ambientBtn" role="button" tabindex="0" title="Attiva/Disattiva suono di sottofondo (motore)">
+    <span>Suono</span>
+    <div class="header-vert-switch">
+     <img src="verton.png" alt="Suono ON" id="ambientSwitchImg">
+    </div>
+   </div>
+   <div class="audio-toggle-group" id="sfxBtn" role="button" tabindex="0" title="Attiva/Disattiva effetti sonori">
+    <span>Effetti</span>
+    <div class="header-vert-switch">
+     <img src="verton.png" alt="Effetti ON" id="sfxSwitchImg">
+    </div>
+   </div>
   </div>
  </header>
 
@@ -702,7 +744,7 @@ footer{
 
  <footer>
   <span>OFFICINA DEGLI ENIGMI · Machina N. 003</span>
-  <span>MACHINA STOCHASTICA · BREVETTO MECCANICO 1.12 – 1894</span>
+  <span>MACHINA STOCHASTICA · BREVETTO MECCANICO 1.14</span>
  </footer>
 </main>
 
@@ -763,13 +805,25 @@ function setHorizontalToggleImg(el, isOn) {
 /* ================= MOTORE SONORO ================= */
 const Sound = (() => {
  let ctx = null;
- let enabled = true;
+ let sfxEnabled = true;
+ let ambientEnabled = true;
 
+ const engineAudio  = new Audio('engine.mp3');
  const clankAudio   = new Audio('clank.mp3');
  const steamAudio   = new Audio('steam-hissing.mp3');
  const breakerAudio = new Audio('breaker-switch.mp3');
  const buttonAudio  = new Audio('button-press.mp3');
  const coinAudio    = new Audio('coin.mp3');
+
+ /* Livello sonoro engine.mp3 al 70%:
+    Guadagno (dB) = 60 * log10(70 / 100) = -9.294189 dB -> ampiezza lineare = (70 / 100)^3 = 0.343 */
+ const ENGINE_PERCENT = 70;
+ const ENGINE_GAIN_DB = 60 * Math.log10(ENGINE_PERCENT / 100);
+ const ENGINE_LINEAR_VOLUME = Math.pow(10, ENGINE_GAIN_DB / 20);
+
+ engineAudio.loop = true;
+ engineAudio.preload = 'auto';
+ engineAudio.volume = Math.max(0, Math.min(1, ENGINE_LINEAR_VOLUME));
 
  [clankAudio, steamAudio, breakerAudio, buttonAudio, coinAudio].forEach(a => {
   a.preload = 'auto';
@@ -783,19 +837,38 @@ const Sound = (() => {
   if (ctx && ctx.state === 'suspended') ctx.resume();
  }
 
- function toggle() {
-  enabled = !enabled;
-  if (!enabled) {
+ function ensureAmbientPlaying() {
+  if (!ambientEnabled) return;
+  if (engineAudio.paused) {
+   const p = engineAudio.play();
+   if (p !== undefined) p.catch(() => {});
+  }
+ }
+
+ function toggleAmbient() {
+  ambientEnabled = !ambientEnabled;
+  if (!ambientEnabled) {
+   engineAudio.pause();
+  } else {
+   ensureAmbientPlaying();
+  }
+  return ambientEnabled;
+ }
+
+ function toggleSfx() {
+  sfxEnabled = !sfxEnabled;
+  if (!sfxEnabled) {
    [clankAudio, steamAudio, breakerAudio, buttonAudio, coinAudio].forEach(a => {
     a.pause();
     a.currentTime = 0;
    });
   }
-  return enabled;
+  return sfxEnabled;
  }
 
  function playClip(audioEl) {
-  if (!enabled) return;
+  ensureAmbientPlaying();
+  if (!sfxEnabled) return;
   try {
    audioEl.pause();
    audioEl.currentTime = 0;
@@ -809,7 +882,8 @@ const Sound = (() => {
  function playCoin() { playClip(coinAudio); }
 
  function wheelTick() {
-  if (!enabled) return;
+  ensureAmbientPlaying();
+  if (!sfxEnabled) return;
   init(); if (!ctx) return;
   const now = ctx.currentTime;
   const osc = ctx.createOscillator();
@@ -824,6 +898,8 @@ const Sound = (() => {
  }
 
  function playMasterLaunchSequence(onAfterClank, onAfterSteam) {
+  ensureAmbientPlaying();
+
   const startSteamPhase = () => {
    if (onAfterClank) onAfterClank();
 
@@ -839,7 +915,7 @@ const Sound = (() => {
     if (onAfterSteam) onAfterSteam();
    };
 
-   if (!enabled) {
+   if (!sfxEnabled) {
     const durMs = (isFinite(steamAudio.duration) && steamAudio.duration > 0)
      ? Math.round(steamAudio.duration * 1000)
      : 1400;
@@ -878,7 +954,7 @@ const Sound = (() => {
    startSteamPhase();
   };
 
-  if (!enabled) {
+  if (!sfxEnabled) {
    const clankDurMs = (isFinite(clankAudio.duration) && clankAudio.duration > 0)
     ? Math.round(clankAudio.duration * 1000)
     : 220;
@@ -905,7 +981,15 @@ const Sound = (() => {
   }
  }
 
- return { init, toggle, playBreaker, playButtonPress, playCoin, wheelTick, playMasterLaunchSequence };
+ /* Avvio automatico al caricamento + sblocco alla prima interazione utente se richiesto dal browser */
+ ensureAmbientPlaying();
+ ['pointerdown', 'keydown'].forEach(evt => {
+  window.addEventListener(evt, () => {
+   ensureAmbientPlaying();
+  }, { passive: true });
+ });
+
+ return { init, toggleAmbient, toggleSfx, playBreaker, playButtonPress, playCoin, wheelTick, playMasterLaunchSequence };
 })();
 
 /* ================= RENDERING MANOMETRI STEAMPUNK ================= */
@@ -1687,12 +1771,37 @@ $('masterSwitch').addEventListener('keydown', e => {
  }
 });
 
-/* ================= PULSANTI HEADER ================= */
-$('sfxBtn').addEventListener('click', () => {
+/* ================= PULSANTI HEADER (SUONO & EFFETTI) ================= */
+function toggleAmbientControl() {
+ const isOn = Sound.toggleAmbient();
+ const img = $('ambientSwitchImg');
+ img.src = isOn ? IMG_V_ON : IMG_V_OFF;
+ img.alt = isOn ? 'Suono ON' : 'Suono OFF';
+}
+
+function toggleSfxControl() {
  Sound.init();
- const isOn = Sound.toggle();
- $('sfxBtn').textContent = isOn ? '🔔 Suoni: ON' : '🔕 Suoni: OFF';
- $('sfxBtn').classList.toggle('muted', !isOn);
+ const isOn = Sound.toggleSfx();
+ const img = $('sfxSwitchImg');
+ img.src = isOn ? IMG_V_ON : IMG_V_OFF;
+ img.alt = isOn ? 'Effetti ON' : 'Effetti OFF';
+ if (isOn) Sound.playBreaker();
+}
+
+$('ambientBtn').addEventListener('click', toggleAmbientControl);
+$('ambientBtn').addEventListener('keydown', e => {
+ if (e.code === 'Space' || e.code === 'Enter') {
+  e.preventDefault();
+  toggleAmbientControl();
+ }
+});
+
+$('sfxBtn').addEventListener('click', toggleSfxControl);
+$('sfxBtn').addEventListener('keydown', e => {
+ if (e.code === 'Space' || e.code === 'Enter') {
+  e.preventDefault();
+  toggleSfxControl();
+ }
 });
 
 $('resetAllBtn').addEventListener('click', () => {
